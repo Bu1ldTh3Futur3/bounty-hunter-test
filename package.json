@@ -1,11 +1,12 @@
 {
   "name": "bounty-hunter-test",
   "version": "1.0.0",
-  "description": "Test repo for Bounty Hunter system validation",
-  "main": "src/index.ts",
+  "description": "Bounty hunter test repo",
+  "main": "dist/currency.js",
   "scripts": {
     "build": "tsc",
-    "test": "node test/run.js"
+    "test": "tsc && node test/run.js",
+    "pretest": ""
   },
   "devDependencies": {
     "typescript": "^5.0.0"
