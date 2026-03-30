@@ -17,23 +17,40 @@ function assert(condition, message) {
 function formatCurrency(amount, currency = "USD") {
   const symbols = { USD: "$", EUR: "€", GBP: "£" };
   const symbol = symbols[currency] || currency + " ";
-  const formatted = amount.toLocaleString("en-US");
+  const formatted = amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   return `${symbol}${formatted}`;
 }
 
 function parseCurrency(str) {
-  const cleaned = str.replace("$", "").replace(/,/g, "");
+  const cleaned = str.replace(/[$€£]/g, "").replace(/,/g, "");
   return parseFloat(cleaned);
 }
 
 console.log("formatCurrency tests:");
 assert(formatCurrency(1234.56) === "$1,234.56", "formats basic amount");
-assert(formatCurrency(1000, "EUR") === "€1,000", "formats EUR");
-assert(formatCurrency(0) === "$0", "formats zero");
+assert(formatCurrency(1000, "EUR") === "€1,000.00", "formats EUR");
+assert(formatCurrency(0) === "$0.00", "formats zero");
+
+console.log("\nformatCurrency negative number tests:");
+assert(formatCurrency(-50) === "$-50.00", "formats negative amount");
+assert(formatCurrency(-1234.56) === "$-1,234.56", "formats negative amount with commas");
+
+console.log("\nformatCurrency decimal places tests:");
+assert(formatCurrency(100) === "$100.00", "always shows 2 decimal places");
+assert(formatCurrency(9.9) === "$9.90", "pads single decimal to 2 places");
 
 console.log("\nparseCurrency tests:");
 assert(parseCurrency("$1,234.56") === 1234.56, "parses basic amount");
 assert(parseCurrency("$0") === 0, "parses zero");
+
+console.log("\nparseCurrency multi-currency tests:");
+assert(parseCurrency("€1,234.56") === 1234.56, "parses EUR symbol");
+assert(parseCurrency("£1,234.56") === 1234.56, "parses GBP symbol");
+assert(parseCurrency("€500.00") === 500, "parses EUR without commas");
+assert(parseCurrency("£0.99") === 0.99, "parses GBP small amount");
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
