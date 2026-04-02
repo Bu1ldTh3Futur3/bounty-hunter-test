@@ -1,0 +1,10 @@
+
+# DatBotty: exclude deps/build
+.datbotty_output.txt
+.datbotty_prompt.md
+.venv/
+__pycache__/
+build/
+dist/
+node_modules/
+venv/
