@@ -1,4 +1,7 @@
 // Simple test runner
+const { execFileSync } = require("node:child_process");
+const path = require("node:path");
+
 let passed = 0;
 let failed = 0;
 
@@ -12,28 +15,25 @@ function assert(condition, message) {
   }
 }
 
-// We test via the source directly (no build step needed for the test)
-// The functions are simple enough to re-implement for testing
-function formatCurrency(amount, currency = "USD") {
-  const symbols = { USD: "$", EUR: "€", GBP: "£" };
-  const symbol = symbols[currency] || currency + " ";
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
-}
+execFileSync("npx", ["tsc"], {
+  cwd: path.resolve(__dirname, ".."),
+  stdio: "inherit",
+});
 
-function parseCurrency(str) {
-  const cleaned = str.replace("$", "").replace(/,/g, "");
-  return parseFloat(cleaned);
-}
+const { formatCurrency, parseCurrency } = require("../dist/format.js");
 
 console.log("formatCurrency tests:");
 assert(formatCurrency(1234.56) === "$1,234.56", "formats basic amount");
-assert(formatCurrency(1000, "EUR") === "€1,000", "formats EUR");
-assert(formatCurrency(0) === "$0", "formats zero");
+assert(formatCurrency(1000, "EUR") === "€1,000.00", "formats EUR");
+assert(formatCurrency(0) === "$0.00", "formats zero");
+assert(formatCurrency(-50) === "$-50.00", "formats negative amounts");
+assert(formatCurrency(100) === "$100.00", "always shows two decimals");
 
 console.log("\nparseCurrency tests:");
 assert(parseCurrency("$1,234.56") === 1234.56, "parses basic amount");
 assert(parseCurrency("$0") === 0, "parses zero");
+assert(parseCurrency("€1,234.56") === 1234.56, "parses euro amounts");
+assert(parseCurrency("£1,234.56") === 1234.56, "parses pound amounts");
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
