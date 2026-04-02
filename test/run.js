@@ -1,53 +1,54 @@
-// Simple test runner
+// quick and dirty test runner — no framework needed for this
 let passed = 0;
 let failed = 0;
 
-function assert(condition, message) {
+function assert(condition, msg) {
   if (condition) {
     passed++;
-    console.log(`  ✓ ${message}`);
+    console.log(`  ✓ ${msg}`);
   } else {
     failed++;
-    console.log(`  ✗ ${message}`);
+    console.log(`  ✗ ${msg}`);
   }
 }
 
-// We test via the source directly (no build step needed for the test)
-// The functions are simple enough to re-implement for testing
-function formatCurrency(amount, currency = "USD") {
-  const symbols = { USD: "$", EUR: "€", GBP: "£" };
-  const symbol = symbols[currency] || currency + " ";
+// re-implement here to avoid needing a build step
+// if these get out of sync with src/format.ts that's on us
+const SYMS = { USD: "$", EUR: "€", GBP: "£" };
 
-  const isNegative = amount < 0;
-  const absAmount = Math.abs(amount);
-  const formatted = absAmount.toLocaleString("en-US", {
+function formatCurrency(amount, currency = "USD") {
+  const sym = SYMS[currency] || currency + " ";
+  const sign = amount < 0 ? "-" : "";
+  return `${sign}${sym}${Math.abs(amount).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
-  return isNegative ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
+  })}`;
 }
 
 function parseCurrency(str) {
-  // Strip all non-digit, non-dot, non-minus characters (currency symbols, commas)
-  const cleaned = str.replace(/[^\d.\-]/g, "");
-  return parseFloat(cleaned);
+  return parseFloat(str.replace(/[^\d.\-]/g, ""));
 }
 
-console.log("formatCurrency tests:");
-assert(formatCurrency(1234.56) === "$1,234.56", "formats basic amount");
-assert(formatCurrency(1000, "EUR") === "€1,000.00", "formats EUR");
-assert(formatCurrency(0) === "$0.00", "formats zero");
-assert(formatCurrency(-50) === "-$50.00", "formats negative number");
-assert(formatCurrency(100) === "$100.00", "always shows 2 decimal places");
-assert(formatCurrency(-1234.56) === "-$1,234.56", "formats negative with decimals");
-assert(formatCurrency(0.5) === "$0.50", "formats small decimals");
+// --- formatCurrency ---
 
-console.log("\nparseCurrency tests:");
-assert(parseCurrency("$1,234.56") === 1234.56, "parses USD");
-assert(parseCurrency("$0") === 0, "parses zero");
-assert(parseCurrency("€1,234.56") === 1234.56, "parses EUR");
-assert(parseCurrency("£500.00") === 500, "parses GBP");
-assert(parseCurrency("-$50.00") === -50, "parses negative USD");
+console.log("formatCurrency:");
+assert(formatCurrency(1234.56) === "$1,234.56", "basic");
+assert(formatCurrency(1000, "EUR") === "€1,000.00", "euro");
+assert(formatCurrency(0) === "$0.00", "zero pads decimals");
+assert(formatCurrency(-50) === "-$50.00", "negative");
+assert(formatCurrency(100) === "$100.00", "no decimals -> pads to .00");
+assert(formatCurrency(-1234.56) === "-$1,234.56", "negative with decimals");
+assert(formatCurrency(0.5) === "$0.50", "small decimal");
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
+// --- parseCurrency ---
+
+console.log("\nparseCurrency:");
+assert(parseCurrency("$1,234.56") === 1234.56, "usd");
+assert(parseCurrency("$0") === 0, "zero");
+assert(parseCurrency("€1,234.56") === 1234.56, "euro");
+assert(parseCurrency("£500.00") === 500, "gbp");
+assert(parseCurrency("-$50.00") === -50, "negative");
+assert(parseCurrency("¥1000") === 1000, "unknown symbol falls through"); // bonus — was in the original bug report scope
+
+console.log(`\n${passed}/${passed + failed} passed`);
 process.exit(failed > 0 ? 1 : 0);
