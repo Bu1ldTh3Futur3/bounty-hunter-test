@@ -13,22 +13,21 @@ function assert(condition, message) {
 }
 
 // Mirror of the fixed TypeScript implementations for testing without a build step
-function formatCurrency(amount, currency = "USD") {
-  const symbols = { USD: "$", EUR: "€", GBP: "£" };
-  const symbol = symbols[currency] || currency + " ";
+const CURRENCY_SYMBOLS = { USD: "$", EUR: "€", GBP: "£" };
 
-  const abs = Math.abs(amount);
-  const formatted = abs.toLocaleString("en-US", {
+function formatCurrency(amount, currency = "USD") {
+  const symbol = CURRENCY_SYMBOLS[currency] ?? currency + " ";
+  const absFormatted = Math.abs(amount).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-
-  return amount < 0 ? `${symbol}-${formatted}` : `${symbol}${formatted}`;
+  return amount < 0 ? `${symbol}-${absFormatted}` : `${symbol}${absFormatted}`;
 }
 
 function parseCurrency(str) {
-  const cleaned = str.replace(/[^\d.,-]/g, "").replace(/,/g, "");
-  return parseFloat(cleaned);
+  const withoutSymbol = str.replace(/[$€£\s]/g, "");
+  const withoutThousands = withoutSymbol.replace(/,/g, "");
+  return parseFloat(withoutThousands);
 }
 
 console.log("formatCurrency tests:");

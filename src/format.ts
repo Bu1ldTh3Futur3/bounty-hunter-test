@@ -1,35 +1,40 @@
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+};
+
 /**
  * Format a number as a currency string.
+ * Negative amounts are represented as "${symbol}-${amount}", e.g. "$-50.00".
+ * Always displays exactly 2 decimal places.
  *
- * @param amount - The amount to format
- * @param currency - Currency code (default: "USD")
- * @returns Formatted string like "$1,234.56" or "$-50.00" for negatives
+ * @param amount - The amount to format (may be negative)
+ * @param currency - ISO 4217 currency code (default: "USD")
+ * @returns Formatted string like "$1,234.56", "$100.00", or "$-50.00"
  */
 export function formatCurrency(amount: number, currency: string = "USD"): string {
-  const symbols: Record<string, string> = {
-    USD: "$",
-    EUR: "€",
-    GBP: "£",
-  };
-  const symbol = symbols[currency] || currency + " ";
+  const symbol = CURRENCY_SYMBOLS[currency] ?? currency + " ";
 
-  const abs = Math.abs(amount);
-  const formatted = abs.toLocaleString("en-US", {
+  const absFormatted = Math.abs(amount).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 
-  return amount < 0 ? `${symbol}-${formatted}` : `${symbol}${formatted}`;
+  return amount < 0 ? `${symbol}-${absFormatted}` : `${symbol}${absFormatted}`;
 }
 
 /**
  * Parse a currency string back to a number.
+ * Handles common symbols ($, €, £), thousands separators, and decimal points.
  *
- * @param str - String like "$1,234.56" or "€1,234.56"
- * @returns The numeric value
+ * @param str - String like "$1,234.56", "€1,234.56", or "£99.99"
+ * @returns The numeric value, or NaN if unparseable
  */
 export function parseCurrency(str: string): number {
-  // Strip all currency symbols and whitespace, keep digits, dots, commas, minus
-  const cleaned = str.replace(/[^\d.,-]/g, "").replace(/,/g, "");
-  return parseFloat(cleaned);
+  // Remove known currency symbols and spaces
+  const withoutSymbol = str.replace(/[$€£\s]/g, "");
+  // Remove thousands separators (commas used as grouping)
+  const withoutThousands = withoutSymbol.replace(/,/g, "");
+  return parseFloat(withoutThousands);
 }
