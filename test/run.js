@@ -1,4 +1,6 @@
 // Simple test runner
+const { formatCurrency, parseCurrency } = require("../dist/format");
+
 let passed = 0;
 let failed = 0;
 
@@ -10,24 +12,6 @@ function assert(condition, message) {
     failed++;
     console.log(`  ✗ ${message}`);
   }
-}
-
-// Mirror of the fixed TypeScript implementations for testing without a build step
-const CURRENCY_SYMBOLS = { USD: "$", EUR: "€", GBP: "£" };
-
-function formatCurrency(amount, currency = "USD") {
-  const symbol = CURRENCY_SYMBOLS[currency] ?? currency + " ";
-  const absFormatted = Math.abs(amount).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return amount < 0 ? `${symbol}-${absFormatted}` : `${symbol}${absFormatted}`;
-}
-
-function parseCurrency(str) {
-  const withoutSymbol = str.replace(/[$€£\s]/g, "");
-  const withoutThousands = withoutSymbol.replace(/,/g, "");
-  return parseFloat(withoutThousands);
 }
 
 console.log("formatCurrency tests:");

@@ -14,6 +14,11 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
  * @returns Formatted string like "$1,234.56", "$100.00", or "$-50.00"
  */
 export function formatCurrency(amount: number, currency: string = "USD"): string {
+  if (typeof amount !== "number" || isNaN(amount)) {
+    const symbol = CURRENCY_SYMBOLS[currency] ?? currency + " ";
+    return `${symbol}0.00`;
+  }
+
   const symbol = CURRENCY_SYMBOLS[currency] ?? currency + " ";
 
   const absFormatted = Math.abs(amount).toLocaleString("en-US", {
