@@ -1,32 +1,45 @@
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+};
+
 /**
  * Format a number as a currency string.
- * 
- * @param amount - The amount to format
- * @param currency - Currency code (default: "USD")
- * @returns Formatted string like "$1,234.56"
+ * Negative amounts are represented as "${symbol}-${amount}", e.g. "$-50.00".
+ * Always displays exactly 2 decimal places.
+ *
+ * @param amount - The amount to format (may be negative)
+ * @param currency - ISO 4217 currency code (default: "USD")
+ * @returns Formatted string like "$1,234.56", "$100.00", or "$-50.00"
  */
 export function formatCurrency(amount: number, currency: string = "USD"): string {
-  const symbols: Record<string, string> = {
-    USD: "$",
-    EUR: "€",
-    GBP: "£",
-  };
-  const symbol = symbols[currency] || currency + " ";
-  
-  // BUG: doesn't handle negative numbers correctly
-  // BUG: doesn't handle zero decimal places (shows "$100" not "$100.00")
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
+  if (typeof amount !== "number" || isNaN(amount)) {
+    const symbol = CURRENCY_SYMBOLS[currency] ?? currency + " ";
+    return `${symbol}0.00`;
+  }
+
+  const symbol = CURRENCY_SYMBOLS[currency] ?? currency + " ";
+
+  const absFormatted = Math.abs(amount).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return amount < 0 ? `${symbol}-${absFormatted}` : `${symbol}${absFormatted}`;
 }
 
 /**
  * Parse a currency string back to a number.
- * 
- * @param str - String like "$1,234.56"
- * @returns The numeric value
+ * Handles common symbols ($, €, £), thousands separators, and decimal points.
+ *
+ * @param str - String like "$1,234.56", "€1,234.56", or "£99.99"
+ * @returns The numeric value, or NaN if unparseable
  */
 export function parseCurrency(str: string): number {
-  // BUG: doesn't strip currency symbols properly — only strips $
-  const cleaned = str.replace("$", "").replace(/,/g, "");
-  return parseFloat(cleaned);
+  // Remove known currency symbols and spaces
+  const withoutSymbol = str.replace(/[$€£\s]/g, "");
+  // Remove thousands separators (commas used as grouping)
+  const withoutThousands = withoutSymbol.replace(/,/g, "");
+  return parseFloat(withoutThousands);
 }
