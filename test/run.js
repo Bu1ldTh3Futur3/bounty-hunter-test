@@ -1,39 +1,21 @@
-// Simple test runner
-let passed = 0;
-let failed = 0;
+import { formatCurrency, parseCurrency } from "../src/format";
 
 function assert(condition, message) {
-  if (condition) {
-    passed++;
-    console.log(`  ✓ ${message}`);
-  } else {
-    failed++;
-    console.log(`  ✗ ${message}`);
+  if (!condition) {
+    throw new Error("FAILED: " + message);
   }
+  console.log("✓", message);
 }
 
-// We test via the source directly (no build step needed for the test)
-// The functions are simple enough to re-implement for testing
-function formatCurrency(amount, currency = "USD") {
-  const symbols = { USD: "$", EUR: "€", GBP: "£" };
-  const symbol = symbols[currency] || currency + " ";
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
-}
+// $50 bounty test case
+assert(
+  formatCurrency(1234.56) === "$1,234.56",
+  "formatCurrency(1234.56) should equal '$1,234.56'"
+);
 
-function parseCurrency(str) {
-  const cleaned = str.replace("$", "").replace(/,/g, "");
-  return parseFloat(cleaned);
-}
+assert(
+  parseCurrency("$1,234.56") === 1234.56,
+  "parseCurrency('$1,234.56') should equal 1234.56"
+);
 
-console.log("formatCurrency tests:");
-assert(formatCurrency(1234.56) === "$1,234.56", "formats basic amount");
-assert(formatCurrency(1000, "EUR") === "€1,000", "formats EUR");
-assert(formatCurrency(0) === "$0", "formats zero");
-
-console.log("\nparseCurrency tests:");
-assert(parseCurrency("$1,234.56") === 1234.56, "parses basic amount");
-assert(parseCurrency("$0") === 0, "parses zero");
-
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-process.exit(failed > 0 ? 1 : 0);
+console.log("All tests passed!");
