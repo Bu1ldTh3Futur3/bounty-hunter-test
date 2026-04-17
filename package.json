@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
-    "test": "node test/run.js"
+    "test": "tsc && node test/run.js"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
