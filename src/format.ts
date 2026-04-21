@@ -1,32 +1,30 @@
 /**
  * Format a number as a currency string.
- * 
+ *
  * @param amount - The amount to format
  * @param currency - Currency code (default: "USD")
  * @returns Formatted string like "$1,234.56"
  */
 export function formatCurrency(amount: number, currency: string = "USD"): string {
-  const symbols: Record<string, string> = {
-    USD: "$",
-    EUR: "€",
-    GBP: "£",
-  };
-  const symbol = symbols[currency] || currency + " ";
-  
-  // BUG: doesn't handle negative numbers correctly
-  // BUG: doesn't handle zero decimal places (shows "$100" not "$100.00")
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
+    const formatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+    });
+    return formatter.format(amount);
 }
 
 /**
- * Parse a currency string back to a number.
- * 
- * @param str - String like "$1,234.56"
- * @returns The numeric value
+ * Parse a currency string into a number.
+ *
+ * @param value - The string to parse
+ * @returns The parsed number
  */
-export function parseCurrency(str: string): number {
-  // BUG: doesn't strip currency symbols properly — only strips $
-  const cleaned = str.replace("$", "").replace(/,/g, "");
-  return parseFloat(cleaned);
+export function parseCurrency(value: string): number {
+    if (!value) return 0;
+    // This strips all non-numeric characters except for periods and minus signs
+  const cleaned = value.replace(/[^0-9.-]/g, "");
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
 }
