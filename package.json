@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
+    "pretest": "npm run build",
     "test": "node test/run.js"
   },
   "devDependencies": {
