@@ -1,4 +1,16 @@
-// Simple test runner
+// Simple test runner — exercises the compiled output of src/format.ts so the
+// tests prove the source actually works (not a copy of the source).
+const { execSync } = require("node:child_process");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const distEntry = path.join(__dirname, "..", "dist", "format.js");
+if (!fs.existsSync(distEntry)) {
+  execSync("npx tsc", { stdio: "inherit", cwd: path.join(__dirname, "..") });
+}
+
+const { formatCurrency, parseCurrency } = require(distEntry);
+
 let passed = 0;
 let failed = 0;
 
@@ -10,24 +22,6 @@ function assert(condition, message) {
     failed++;
     console.log(`  ✗ ${message}`);
   }
-}
-
-// We test via the source directly (no build step needed for the test)
-// The functions are simple enough to re-implement for testing
-function formatCurrency(amount, currency = "USD") {
-  const symbols = { USD: "$", EUR: "€", GBP: "£" };
-  const symbol = symbols[currency] || currency + " ";
-  const isNegative = amount < 0;
-  const formatted = Math.abs(amount).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return `${symbol}${isNegative ? "-" : ""}${formatted}`;
-}
-
-function parseCurrency(str) {
-  const cleaned = str.replace(/[$€£]/g, "").replace(/,/g, "");
-  return parseFloat(cleaned);
 }
 
 console.log("formatCurrency tests:");
