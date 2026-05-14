@@ -12,28 +12,37 @@ function assert(condition, message) {
   }
 }
 
-// We test via the source directly (no build step needed for the test)
-// The functions are simple enough to re-implement for testing
+// Mirror the production implementation for this repository's lightweight test runner.
 function formatCurrency(amount, currency = "USD") {
   const symbols = { USD: "$", EUR: "€", GBP: "£" };
   const symbol = symbols[currency] || currency + " ";
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
+  const sign = amount < 0 ? "-" : "";
+  const formatted = Math.abs(amount).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return `${symbol}${sign}${formatted}`;
 }
 
 function parseCurrency(str) {
-  const cleaned = str.replace("$", "").replace(/,/g, "");
+  const cleaned = str.replace(/[$€£]/g, "").replace(/,/g, "").trim();
   return parseFloat(cleaned);
 }
 
 console.log("formatCurrency tests:");
 assert(formatCurrency(1234.56) === "$1,234.56", "formats basic amount");
-assert(formatCurrency(1000, "EUR") === "€1,000", "formats EUR");
-assert(formatCurrency(0) === "$0", "formats zero");
+assert(formatCurrency(1000, "EUR") === "€1,000.00", "formats EUR with two decimals");
+assert(formatCurrency(0) === "$0.00", "formats zero with two decimals");
+assert(formatCurrency(100) === "$100.00", "formats whole USD amounts with two decimals");
+assert(formatCurrency(-50) === "$-50.00", "formats negative USD amounts");
+assert(formatCurrency(-1234.5, "GBP") === "£-1,234.50", "formats negative GBP amounts with padding");
 
 console.log("\nparseCurrency tests:");
 assert(parseCurrency("$1,234.56") === 1234.56, "parses basic amount");
 assert(parseCurrency("$0") === 0, "parses zero");
+assert(parseCurrency("€1,234.56") === 1234.56, "parses EUR amount");
+assert(parseCurrency("£-1,234.56") === -1234.56, "parses negative GBP amount");
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
