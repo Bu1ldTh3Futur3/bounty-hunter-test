@@ -12,23 +12,7 @@ function assert(condition, message) {
   }
 }
 
-// We test via the source directly (no build step needed for the test)
-// The functions are simple enough to re-implement for testing
-function formatCurrency(amount, currency = "USD") {
-  const symbols = { USD: "$", EUR: "€", GBP: "£" };
-  const symbol = symbols[currency] || currency + " ";
-  const absoluteAmount = Math.abs(amount);
-  const formatted = absoluteAmount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return `${symbol}${amount < 0 ? "-" : ""}${formatted}`;
-}
-
-function parseCurrency(str) {
-  const cleaned = str.replace(/[^\d.-]/g, "");
-  return parseFloat(cleaned);
-}
+const { formatCurrency, parseCurrency } = require("../dist/format.js");
 
 console.log("formatCurrency tests:");
 assert(formatCurrency(1234.56) === "$1,234.56", "formats basic amount");
