@@ -13,10 +13,10 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
   };
   const symbol = symbols[currency] || currency + " ";
   
-  // BUG: doesn't handle negative numbers correctly
-  // BUG: doesn't handle zero decimal places (shows "$100" not "$100.00")
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
+  // Handle negative numbers
+  const absoluteAmount = Math.abs(amount);
+  const formatted = absoluteAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${symbol}${amount < 0 ? "-" : ""}${formatted}`;
 }
 
 /**
@@ -26,7 +26,7 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
  * @returns The numeric value
  */
 export function parseCurrency(str: string): number {
-  // BUG: doesn't strip currency symbols properly — only strips $
-  const cleaned = str.replace("$", "").replace(/,/g, "");
+  // Strip currency symbols and commas
+  const cleaned = str.replace(/[$€£]/g, "").replace(/,/g, "");
   return parseFloat(cleaned);
 }
