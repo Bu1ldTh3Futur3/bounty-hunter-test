@@ -3,13 +3,13 @@
  *
  * @param amount - The amount to format
  * @param currency - Currency code (default: "USD")
- * @returns Formatted string like "$1,234.56"
+ * @returns Formatted string with two decimal places, like "$1,234.56" or "-$50.00"
  */
 export function formatCurrency(amount: number, currency: string = "USD"): string {
   const symbols: Record<string, string> = {
     USD: "$",
-    EUR: "\u20ac",
-    GBP: "\u00a3",
+    EUR: "€",
+    GBP: "£",
   };
   const symbol = symbols[currency] || currency + " ";
   const formatted = Math.abs(amount).toLocaleString("en-US", {
@@ -23,10 +23,13 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
 /**
  * Parse a currency string back to a number.
  *
- * @param str - String like "$1,234.56"
- * @returns The numeric value
+ * @param str - Currency text such as "$1,234.56", "€1,234.56", or "USD 1,234.56"
+ * @returns The numeric value, or NaN when the normalized format is invalid
  */
 export function parseCurrency(str: string): number {
-  const cleaned = str.replace(/[^\d.-]/g, "");
-  return parseFloat(cleaned);
+  const cleaned = str.replace(/,/g, "").replace(/[^\d.-]/g, "");
+  if (!/^-?(?:\d+|\d+\.\d*|\.\d+)$/.test(cleaned)) {
+    return NaN;
+  }
+  return Number(cleaned);
 }
