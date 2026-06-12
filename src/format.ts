@@ -1,9 +1,9 @@
 /**
  * Format a number as a currency string.
- * 
+ *
  * @param amount - The amount to format
  * @param currency - Currency code (default: "USD")
- * @returns Formatted string like "$1,234.56"
+ * @returns Formatted string with two decimal places, like "$1,234.56" or "-$50.00"
  */
 export function formatCurrency(amount: number, currency: string = "USD"): string {
   const symbols: Record<string, string> = {
@@ -12,21 +12,24 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
     GBP: "£",
   };
   const symbol = symbols[currency] || currency + " ";
-  
-  // BUG: doesn't handle negative numbers correctly
-  // BUG: doesn't handle zero decimal places (shows "$100" not "$100.00")
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
+  const formatted = Math.abs(amount).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return `${amount < 0 ? "-" : ""}${symbol}${formatted}`;
 }
 
 /**
  * Parse a currency string back to a number.
- * 
- * @param str - String like "$1,234.56"
- * @returns The numeric value
+ *
+ * @param str - Currency text such as "$1,234.56", "€1,234.56", or "USD 1,234.56"
+ * @returns The numeric value, or NaN when the normalized format is invalid
  */
 export function parseCurrency(str: string): number {
-  // BUG: doesn't strip currency symbols properly — only strips $
-  const cleaned = str.replace("$", "").replace(/,/g, "");
-  return parseFloat(cleaned);
+  const cleaned = str.replace(/,/g, "").replace(/[^\d.-]/g, "");
+  if (!/^-?(?:\d+|\d+\.\d*|\.\d+)$/.test(cleaned)) {
+    return NaN;
+  }
+  return Number(cleaned);
 }
