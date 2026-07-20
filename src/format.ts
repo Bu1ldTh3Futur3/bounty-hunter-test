@@ -1,9 +1,9 @@
 /**
  * Format a number as a currency string.
- * 
+ *
  * @param amount - The amount to format
  * @param currency - Currency code (default: "USD")
- * @returns Formatted string like "$1,234.56"
+ * @returns Formatted string like "$1,234.56" or "$-50.00"
  */
 export function formatCurrency(amount: number, currency: string = "USD"): string {
   const symbols: Record<string, string> = {
@@ -12,21 +12,28 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
     GBP: "£",
   };
   const symbol = symbols[currency] || currency + " ";
-  
-  // BUG: doesn't handle negative numbers correctly
-  // BUG: doesn't handle zero decimal places (shows "$100" not "$100.00")
-  const formatted = amount.toLocaleString("en-US");
-  return `${symbol}${formatted}`;
+
+  const sign = amount < 0 ? "-" : "";
+  const abs = Math.abs(amount);
+  const formatted = abs.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  // "$" + optional "-" + digits → "$-50.00" for negatives (acceptance)
+  return `${symbol}${sign}${formatted}`;
 }
 
 /**
  * Parse a currency string back to a number.
- * 
- * @param str - String like "$1,234.56"
+ *
+ * @param str - String like "$1,234.56", "€1,234.56", or "£99.00"
  * @returns The numeric value
  */
 export function parseCurrency(str: string): number {
-  // BUG: doesn't strip currency symbols properly — only strips $
-  const cleaned = str.replace("$", "").replace(/,/g, "");
+  // Strip common currency symbols and grouping commas
+  const cleaned = str
+    .replace(/[$€£]/g, "")
+    .replace(/,/g, "")
+    .trim();
   return parseFloat(cleaned);
 }
